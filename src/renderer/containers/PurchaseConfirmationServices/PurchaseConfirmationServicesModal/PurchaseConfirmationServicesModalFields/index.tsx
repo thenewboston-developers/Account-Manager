@@ -1,5 +1,6 @@
 import React, {FC, useEffect, useMemo} from 'react';
 import {useDispatch, useSelector} from 'react-redux';
+import {Account} from 'thenewboston';
 
 import {FormInput, FormSelectDetailed} from '@renderer/components/FormComponents';
 import RequiredAsterisk from '@renderer/components/RequiredAsterisk';
@@ -13,7 +14,6 @@ import {
   getAuthenticatedBanks,
 } from '@renderer/selectors';
 import {AppDispatch, BaseValidator, InputOption} from '@renderer/types';
-import {getKeyPairFromSigningKeyHex} from '@renderer/utils/signing';
 import {displayErrorToast} from '@renderer/utils/toast';
 import {getBankTxFee, getPrimaryValidatorTxFee} from '@renderer/utils/transactions';
 
@@ -37,7 +37,7 @@ const PurchaseConfirmationServicesModalFields: FC<ComponentProps> = ({submitting
   const authenticatedBanks = useSelector(getAuthenticatedBanks);
   const accountBalances = useSelector(getAccountBalances);
   const selectedBank = authenticatedBanks[values.bankAddress];
-  const {publicKeyHex: accountNumber} = getKeyPairFromSigningKeyHex(selectedBank.account_signing_key);
+  const {accountNumberHex: accountNumber} = new Account(selectedBank.account_signing_key);
   const selectedAccountBalance = accountBalances[accountNumber];
 
   useEffect(() => {

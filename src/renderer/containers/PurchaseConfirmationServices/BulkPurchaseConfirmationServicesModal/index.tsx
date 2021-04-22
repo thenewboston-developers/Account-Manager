@@ -3,11 +3,10 @@ import {useDispatch, useSelector} from 'react-redux';
 
 import Modal from '@renderer/components/Modal';
 import {fetchBankConfig} from '@renderer/dispatchers/banks';
-import {getActiveBankConfig, getPrimaryValidatorConfig} from '@renderer/selectors';
+import {getActiveBankConfig} from '@renderer/selectors';
 import {AppDispatch, ManagedNode} from '@renderer/types';
 import {formatAddressFromNode} from '@renderer/utils/address';
 import {sendBlock} from '@renderer/utils/blocks';
-import {getKeyPairFromSigningKeyHex} from '@renderer/utils/signing';
 import {displayErrorToast, displayToast} from '@renderer/utils/toast';
 
 import BulkPurchaseConfirmationServicesModalFields from './BulkPurchaseConfirmationServicesModalFields';
@@ -23,7 +22,6 @@ interface ComponentProps {
 const BulkPurchaseConfirmationServicesModal: FC<ComponentProps> = ({bank, close, selectedValidators}) => {
   const dispatch = useDispatch<AppDispatch>();
   const activeBankConfig = useSelector(getActiveBankConfig)!;
-  const primaryValidator = useSelector(getPrimaryValidatorConfig)!;
 
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [formValues, dispatchFormValues] = useReducer(
@@ -45,19 +43,18 @@ const BulkPurchaseConfirmationServicesModal: FC<ComponentProps> = ({bank, close,
   const handleSubmit = async (): Promise<void> => {
     try {
       setSubmitting(true);
-      const {publicKeyHex: bankAccountNumber} = getKeyPairFromSigningKeyHex(bank.account_signing_key);
-      const recipients = Object.entries(formValues)
+      const transactions = Object.entries(formValues)
         .map(([nodeIdentifier, {amount}]) => {
           const validatorData = selectedValidators[nodeIdentifier];
           return {
-            accountNumber: validatorData.account_number,
             amount: parseInt(amount, 10),
+            recipient: validatorData.account_number,
           };
         })
         .filter(({amount}) => !!amount);
 
-      await sendBlock(activeBankConfig, primaryValidator, bank.account_signing_key, bankAccountNumber, recipients);
-      displayToast(`You have purchased ${recipients.length} services`, 'success');
+      await sendBlock(activeBankConfig, bank.account_signing_key, transactions);
+      displayToast(`You have purchased ${transactions.length} services`, 'success');
       close();
     } catch (error) {
       displayErrorToast(error);

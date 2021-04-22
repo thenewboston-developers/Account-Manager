@@ -1,9 +1,8 @@
-import axios from 'axios';
 import omit from 'lodash/omit';
-import {AXIOS_TIMEOUT_MS} from '@renderer/config';
+import {Account, Bank, ConfirmationValidator} from 'thenewboston';
+
 import {BaseValidator, ManagedNode} from '@renderer/types';
 import {formatAddressFromNode} from '@renderer/utils/address';
-import {generateSignedMessage, getKeyPairFromSigningKeyHex} from '@renderer/utils/signing';
 
 export type SelectedValidatorState = {
   [nodeIdentifier: string]: BaseValidator & {
@@ -61,55 +60,34 @@ export const checkConnectionBankToValidator = async (
   validator: BaseValidator,
 ): Promise<void> => {
   const bankAddress = formatAddressFromNode(managedBank);
+  const bank = new Bank(bankAddress);
 
   try {
-    await axios.get(`${bankAddress}/validators/${validator.node_identifier}`, {timeout: AXIOS_TIMEOUT_MS});
+    await bank.getValidator(validator.node_identifier);
   } catch (error) {
     if (!managedBank.nid_signing_key) throw new Error('No NID SK');
-    const {publicKeyHex, signingKey} = getKeyPairFromSigningKeyHex(managedBank.nid_signing_key);
-    const validatorData = {
-      account_number: validator.account_number,
-      daily_confirmation_rate: validator.daily_confirmation_rate,
-      ip_address: validator.ip_address,
-      node_identifier: validator.node_identifier,
-      protocol: validator.protocol,
-      root_account_file: validator.root_account_file,
-      root_account_file_hash: validator.root_account_file_hash,
-      trust: 0,
-      version: validator.version,
-    };
-    const signedMessage = generateSignedMessage(validatorData, publicKeyHex, signingKey);
-    await axios.post(`${bankAddress}/validators`, signedMessage, {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
+    const bankNetworkKeyPair = new Account(managedBank.nid_signing_key);
+    const {ip_address: ipAddress, port, protocol} = validator;
+    await bank.sendConnectionRequest(ipAddress, port, protocol, bankNetworkKeyPair);
   }
 };
 
 export const checkConnectionValidatorToBank = async (
-  managedBank: ManagedNode,
+  managedValidator: ManagedNode,
   validator: BaseValidator,
   bankNodeIdentifier: string,
 ): Promise<void> => {
   const validatorAddress = formatAddressFromNode(validator);
+  const validatorNode = new ConfirmationValidator(validatorAddress);
 
   try {
-    await axios.get(`${validatorAddress}/banks/${bankNodeIdentifier}`, {timeout: AXIOS_TIMEOUT_MS});
+    await validatorNode.getBank(bankNodeIdentifier);
   } catch (error) {
-    if (!managedBank.nid_signing_key) throw new Error('No NID SK');
-    const {publicKeyHex, signingKey} = getKeyPairFromSigningKeyHex(managedBank.nid_signing_key);
-    const connectionRequestData = {
-      ip_address: managedBank.ip_address,
-      port: managedBank.port,
-      protocol: managedBank.protocol,
-    };
-    const signedMessage = generateSignedMessage(connectionRequestData, publicKeyHex, signingKey);
-    await axios.post(`${validatorAddress}/connection_requests`, signedMessage, {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
+    if (!managedValidator.nid_signing_key) throw new Error('No NID SK');
+    const validatorNetworkKeyPair = new Account(managedValidator.nid_signing_key);
+
+    const {ip_address: ipAddress, port, protocol} = managedValidator;
+    await validatorNode.sendConnectionRequest(ipAddress, port, protocol, validatorNetworkKeyPair);
   }
 };
 

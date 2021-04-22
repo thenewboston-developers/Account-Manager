@@ -19,7 +19,6 @@ describe('getBankTxFee to return the following:', () => {
         default_transaction_fee: 1,
         ip_address: '143.110.133.165',
         node_identifier: 'e92e8fbc4d28e519bc',
-        node_type: NodeType.primaryValidator,
         port: 80,
         protocol: 'http',
         root_account_file: 'https://account_file.json',
@@ -29,7 +28,6 @@ describe('getBankTxFee to return the following:', () => {
         version: 'v1.0',
       },
       protocol: 'http',
-      trust: '100.00',
       version: 'v1.0',
     };
     senderAccountNumber = '056b85b6427d004cfd36a4';
@@ -50,7 +48,6 @@ describe('getBankTxFee to return the following:', () => {
         default_transaction_fee: 1,
         ip_address: '143.110.133.165',
         node_identifier: 'e92e8fbc4d28e519bc',
-        node_type: NodeType.primaryValidator,
         port: 80,
         protocol: 'http',
         root_account_file: 'https://account_file.json',
@@ -60,7 +57,6 @@ describe('getBankTxFee to return the following:', () => {
         version: 'v1.0',
       },
       protocol: 'http',
-      trust: '100.00',
       version: 'v1.0',
     };
     senderAccountNumber = '056b85b6427d004cfd36a4';
@@ -85,7 +81,6 @@ describe('getPrimaryValidatorTxFee to return the following:', () => {
       root_account_file: 'https://account_file.json',
       root_account_file_hash: '5eacfee38ahash7',
       seed_block_identifier: '',
-      trust: '100.00',
       version: 'v1.0',
     };
     senderAccountNumber = '056b85b6427d004cfd36a4';
@@ -105,7 +100,6 @@ describe('getPrimaryValidatorTxFee to return the following:', () => {
       root_account_file: 'https://account_file.json',
       root_account_file_hash: '5eacfee38ahash7',
       seed_block_identifier: '',
-      trust: '100.00',
       version: 'v1.0',
     };
     senderAccountNumber = '056b85b6427d004cfd36a4';

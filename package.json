@@ -160,6 +160,7 @@
     "resolve-url-loader": "^3.1.2",
     "semver": "7.3.2",
     "terser-webpack-plugin": "^4.2.3",
+    "thenewboston": "^1.1.0-alpha.3",
     "ts-pnp": "^1.2.0",
     "tweetnacl": "^1.0.3",
     "typeface-roboto": "^0.0.75",

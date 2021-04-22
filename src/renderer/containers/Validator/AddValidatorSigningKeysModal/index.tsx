@@ -1,5 +1,6 @@
 import React, {FC, useMemo} from 'react';
 import {useDispatch, useSelector} from 'react-redux';
+import {Account} from 'thenewboston';
 
 import {FormTextArea} from '@renderer/components/FormComponents';
 import Modal from '@renderer/components/Modal';
@@ -9,7 +10,6 @@ import {getManagedAccounts, getManagedValidators, getValidatorConfigs} from '@re
 import {setManagedValidator} from '@renderer/store/app';
 import {AppDispatch} from '@renderer/types';
 import yup from '@renderer/utils/forms/yup';
-import {getKeyPairFromSigningKeyHex} from '@renderer/utils/signing';
 import {displayToast} from '@renderer/utils/toast';
 
 interface ComponentProps {
@@ -55,8 +55,8 @@ const AddValidatorSigningKeysModal: FC<ComponentProps> = ({close}) => {
 
   const checkPrivateSigningKey = (publicKey: string, privateKey: string): boolean => {
     try {
-      const {publicKeyHex} = getKeyPairFromSigningKeyHex(privateKey);
-      return publicKeyHex === publicKey;
+      const {accountNumberHex} = new Account(privateKey);
+      return accountNumberHex === publicKey;
     } catch (error) {
       return false;
     }

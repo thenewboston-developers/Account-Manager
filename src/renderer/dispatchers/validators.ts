@@ -1,6 +1,6 @@
-import axios from 'axios';
+import {ConfirmationValidator} from 'thenewboston';
 
-import {AXIOS_TIMEOUT_MS, defaultPaginatedQueryParam} from '@renderer/config';
+import {defaultPaginatedQueryParam} from '@renderer/config';
 import {ACCOUNTS, BANKS, VALIDATORS} from '@renderer/constants/actions';
 import {
   setValidatorAccounts,
@@ -17,18 +17,18 @@ import {
   BaseValidator,
   NodeType,
   PaginatedQueryParams,
-  RawPrimaryValidatorConfig,
+  RawValidatorConfig,
   ValidatorAccount,
   ValidatorBank,
   ValidatorConfig,
 } from '@renderer/types';
-import {fetchPaginatedResults, sanitizePortFieldFromRawPrimaryValidatorConfig} from '@renderer/utils/api';
+import {fetchValidatorPaginatedResults, sanitizePortFieldFromRawValidatorConfig} from '@renderer/utils/api';
 
 export const fetchValidatorAccounts = (
   address: string,
   params: PaginatedQueryParams = defaultPaginatedQueryParam,
 ) => async (dispatch: AppDispatch) => {
-  return fetchPaginatedResults<ValidatorAccount>(
+  return fetchValidatorPaginatedResults<ValidatorAccount>(
     address,
     ACCOUNTS,
     params,
@@ -42,7 +42,7 @@ export const fetchValidatorBanks = (
   address: string,
   params: PaginatedQueryParams = defaultPaginatedQueryParam,
 ) => async (dispatch: AppDispatch) => {
-  return fetchPaginatedResults<ValidatorBank>(
+  return fetchValidatorPaginatedResults<ValidatorBank>(
     address,
     BANKS,
     params,
@@ -56,10 +56,11 @@ export const fetchValidatorConfig = (address: string) => async (
   dispatch: AppDispatch,
 ): Promise<{address: string; data?: ValidatorConfig; error?: any}> => {
   try {
-    const {data: rawData} = await axios.get<RawPrimaryValidatorConfig>(`${address}/config`, {
-      timeout: AXIOS_TIMEOUT_MS,
-    });
-    const data = sanitizePortFieldFromRawPrimaryValidatorConfig(rawData);
+    const validator = new ConfirmationValidator(address);
+
+    const rawData = await validator.getConfig();
+
+    const data = sanitizePortFieldFromRawValidatorConfig(rawData as RawValidatorConfig);
 
     if (data.node_type !== NodeType.primaryValidator && data.node_type !== NodeType.confirmationValidator) {
       const errorObject = {address, error: 'Node not a validator'};
@@ -88,7 +89,7 @@ export const fetchValidatorValidators = (
   address: string,
   params: PaginatedQueryParams = defaultPaginatedQueryParam,
 ) => async (dispatch: AppDispatch) => {
-  return fetchPaginatedResults<BaseValidator>(
+  return fetchValidatorPaginatedResults<BaseValidator>(
     address,
     VALIDATORS,
     params,

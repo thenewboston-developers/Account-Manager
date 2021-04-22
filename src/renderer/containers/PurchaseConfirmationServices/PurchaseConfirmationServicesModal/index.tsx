@@ -1,5 +1,6 @@
 import React, {FC, useCallback, useMemo, useState} from 'react';
 import {useSelector} from 'react-redux';
+import {Account} from 'thenewboston';
 
 import Modal from '@renderer/components/Modal';
 import {INVALID_AMOUNT_ERROR} from '@renderer/constants/form-validation';
@@ -13,7 +14,6 @@ import {
 import {BaseValidator} from '@renderer/types';
 import {sendBlock} from '@renderer/utils/blocks';
 import yup from '@renderer/utils/forms/yup';
-import {getKeyPairFromSigningKeyHex} from '@renderer/utils/signing';
 import {displayErrorToast, displayToast} from '@renderer/utils/toast';
 import {getBankTxFee, getPrimaryValidatorTxFee} from '@renderer/utils/transactions';
 
@@ -46,9 +46,8 @@ const PurchaseConfirmationServicesModal: FC<ComponentProps> = ({close, initialBa
     try {
       setSubmitting(true);
       const selectedBank = authenticatedBanks[bankAddress];
-      const {publicKeyHex: bankAccountNumber} = getKeyPairFromSigningKeyHex(selectedBank.account_signing_key);
-      await sendBlock(activeBankConfig, activePrimaryValidator, selectedBank.account_signing_key, bankAccountNumber, [
-        {accountNumber: validator.account_number, amount: parseInt(amount, 10)},
+      await sendBlock(activeBankConfig, selectedBank.account_signing_key, [
+        {amount: parseInt(amount, 10), recipient: validator.account_number},
       ]);
       displayToast('Your payment has been sent', 'success');
       close();
@@ -103,7 +102,7 @@ const PurchaseConfirmationServicesModal: FC<ComponentProps> = ({close, initialBa
       if (!amount || !bankAddress) return true;
 
       const selectedBank = authenticatedBanks[bankAddress];
-      const {publicKeyHex: accountNumber} = getKeyPairFromSigningKeyHex(selectedBank.account_signing_key);
+      const {accountNumberHex: accountNumber} = new Account(selectedBank.account_signing_key);
 
       const managedAccountBalance = accountBalances[accountNumber];
       if (!managedAccountBalance) return false;
@@ -135,7 +134,7 @@ const PurchaseConfirmationServicesModal: FC<ComponentProps> = ({close, initialBa
           (address) => {
             if (!address) return true;
             const selectedBank = authenticatedBanks[address];
-            const {publicKeyHex: accountNumber} = getKeyPairFromSigningKeyHex(selectedBank.account_signing_key);
+            const {accountNumberHex: accountNumber} = new Account(selectedBank.account_signing_key);
             return accountNumber !== validator.account_number;
           },
         )

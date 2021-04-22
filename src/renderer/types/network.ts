@@ -22,9 +22,9 @@ export interface BankAccount extends AccountNumber, CreatedModified, Id {
   trust: string;
 }
 
-export interface BankConfig extends Node {
+export interface BankConfig extends Omit<Node, 'trust'> {
   node_type: NodeType.bank;
-  primary_validator: PrimaryValidatorConfig;
+  primary_validator: PrimaryValidatorInNodeConfig;
 }
 
 export interface BankConfirmationBlock extends CreatedModified, Id {
@@ -121,7 +121,7 @@ export interface PaginatedResults<T> {
 
 export type PaginatedResultsWithError<T> = PaginatedResults<T> & Error;
 
-export interface PrimaryValidatorConfig extends BaseValidator {
+export interface PrimaryValidatorConfig extends Omit<BaseValidator, 'trust'> {
   node_type: NodeType.primaryValidator;
 }
 
@@ -129,10 +129,20 @@ export type ProtocolType = 'http' | 'https';
 
 export interface RawBankConfig extends Omit<BankConfig, 'port' | 'primary_validator'> {
   port: number | null;
-  primary_validator: RawPrimaryValidatorConfig;
+  primary_validator: RawPrimaryValidatorInNodeConfig;
+}
+
+export type PrimaryValidatorInNodeConfig = Omit<BaseValidator, 'node_type'>;
+
+export interface RawPrimaryValidatorInNodeConfig extends Omit<PrimaryValidatorInNodeConfig, 'port'> {
+  port: number | null;
 }
 
 export interface RawPrimaryValidatorConfig extends Omit<PrimaryValidatorConfig, 'port'> {
+  port: number | null;
+}
+
+export interface RawValidatorConfig extends Omit<ValidatorConfig, 'port'> {
   port: number | null;
 }
 
@@ -155,7 +165,7 @@ export interface ValidatorBank extends Node {
   confirmation_expiration: string | null;
 }
 
-export interface ValidatorConfig extends BaseValidator {
+export interface ValidatorConfig extends Omit<BaseValidator, 'trust'> {
   node_type: NodeType.primaryValidator | NodeType.confirmationValidator;
 }
 

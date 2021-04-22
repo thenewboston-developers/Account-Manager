@@ -1,5 +1,6 @@
 import React, {FC, useMemo} from 'react';
 import {useDispatch, useSelector} from 'react-redux';
+import {Account} from 'thenewboston';
 
 import {FormTextArea} from '@renderer/components/FormComponents';
 import Modal from '@renderer/components/Modal';
@@ -14,7 +15,6 @@ import {getBankConfigs, getManagedAccounts, getManagedBanks} from '@renderer/sel
 import {setManagedBank} from '@renderer/store/app';
 import {AppDispatch} from '@renderer/types';
 import yup from '@renderer/utils/forms/yup';
-import {getKeyPairFromSigningKeyHex} from '@renderer/utils/signing';
 import {displayToast} from '@renderer/utils/toast';
 
 interface ComponentProps {
@@ -49,15 +49,6 @@ const AddBankSigningKeysModal: FC<ComponentProps> = ({close}) => {
     return `${prefix} Signing Keys`;
   }, [managedBank]);
 
-  const checkPrivateSigningKey = (publicKey: string, privateKey: string): boolean => {
-    try {
-      const {publicKeyHex} = getKeyPairFromSigningKeyHex(privateKey);
-      return publicKeyHex === publicKey;
-    } catch (error) {
-      return false;
-    }
-  };
-
   const handleSubmit = ({accountSigningKey, nidSigningKey}: FormValues): void => {
     dispatch(
       setManagedBank({
@@ -79,7 +70,7 @@ const AddBankSigningKeysModal: FC<ComponentProps> = ({close}) => {
         .test({
           message: SIGNING_KEY_INVALID_ACCOUNT_ERROR,
           name: 'is-valid-private-key-account',
-          test: (key: any) => checkPrivateSigningKey(accountNumber, key),
+          test: (key: any) => Account.isValidPair(accountNumber, key),
         }),
       nidSigningKey: yup
         .string()
@@ -88,7 +79,7 @@ const AddBankSigningKeysModal: FC<ComponentProps> = ({close}) => {
         .test({
           message: SIGNING_KEY_INVALID_NID_ERROR,
           name: 'is-valid-private-key-nid',
-          test: (key: any) => checkPrivateSigningKey(nodeIdentifier, key),
+          test: (key: any) => Account.isValidPair(nodeIdentifier, key),
         }),
     });
   }, [accountNumber, nodeIdentifier]);

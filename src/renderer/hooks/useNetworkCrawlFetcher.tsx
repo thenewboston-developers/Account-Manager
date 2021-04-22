@@ -1,12 +1,18 @@
 import {useCallback, useEffect, useState} from 'react';
 import {useDispatch, useSelector} from 'react-redux';
 import {useParams} from 'react-router-dom';
-import axios from 'axios';
+import {Bank, ConfirmationValidator} from 'thenewboston';
 
-import {AXIOS_TIMEOUT_MS} from '@renderer/config';
 import {getCrawlSockets} from '@renderer/selectors';
 import {toggleCrawlProcess} from '@renderer/store/sockets';
-import {AddressParams, AppDispatch, CrawlStatus, ManagedNode, NodeCrawlStatusWithAddress} from '@renderer/types';
+import {
+  AddressParams,
+  AppDispatch,
+  CrawlStatus,
+  ManagedNode,
+  NodeCrawlStatusWithAddress,
+  NodeType,
+} from '@renderer/types';
 import {generateUuid} from '@renderer/utils/local';
 import {displayToast} from '@renderer/utils/toast';
 import {formatAddress} from '@renderer/utils/address';
@@ -42,7 +48,17 @@ const useNetworkCrawlFetcher = (
     const fetchData = async (): Promise<void> => {
       try {
         setLoading(true);
-        const {data} = await axios.get<NodeCrawlStatusWithAddress>(`${address}/crawl`, {timeout: AXIOS_TIMEOUT_MS});
+
+        let node: Bank | ConfirmationValidator;
+        node = new Bank(address);
+        const nodeConfig = await node.getConfig();
+
+        if (nodeConfig.node_type === NodeType.confirmationValidator) {
+          node = new ConfirmationValidator(address);
+        }
+
+        const data = (await node.getCrawlStatus()) as NodeCrawlStatusWithAddress;
+
         setCrawlStatus(data.crawl_status || CrawlStatus.notCrawling);
         setCrawlLastCompleted(data.crawl_last_completed);
       } catch (error) {

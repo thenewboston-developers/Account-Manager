@@ -2,6 +2,7 @@ import React, {ChangeEvent, Dispatch, FC, useCallback, useEffect, useMemo} from 
 import {useDispatch, useSelector} from 'react-redux';
 import clsx from 'clsx';
 import noop from 'lodash/noop';
+import {Account} from 'thenewboston';
 import {Button, Icon, IconType} from '@thenewboston/ui';
 
 import ExpandableText from '@renderer/components/ExpandableText';
@@ -19,7 +20,6 @@ import {
 } from '@renderer/selectors';
 import {AppDispatch, ManagedNode} from '@renderer/types';
 import {formatAddressFromNode, isSameNode} from '@renderer/utils/address';
-import {getKeyPairFromSigningKeyHex} from '@renderer/utils/signing';
 import {displayErrorToast} from '@renderer/utils/toast';
 import {getBankTxFee, getPrimaryValidatorTxFee} from '@renderer/utils/transactions';
 
@@ -72,7 +72,7 @@ const BulkPurchaseConfirmationServicesModalFields: FC<ComponentProps> = ({
   const primaryValidatorConfig = useSelector(getPrimaryValidatorConfig)!;
   const {data: selectedBankConfig} = bankConfigs[selectedBankAddress];
   const {node_identifier: selectedBankNodeIdentifier} = selectedBankConfig;
-  const {publicKeyHex: selectedBankAccountNumber} = getKeyPairFromSigningKeyHex(selectedBank.account_signing_key);
+  const {accountNumberHex: selectedBankAccountNumber} = new Account(selectedBank.account_signing_key);
   const selectedBankBalance = accountBalances[selectedBankAccountNumber];
 
   const testConnection = useCallback(

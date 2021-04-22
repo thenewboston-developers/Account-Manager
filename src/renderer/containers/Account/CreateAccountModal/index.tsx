@@ -1,6 +1,7 @@
 import React, {FC, useMemo, useState} from 'react';
 import {useDispatch, useSelector} from 'react-redux';
 import {useHistory} from 'react-router-dom';
+import {Account} from 'thenewboston';
 
 import Modal from '@renderer/components/Modal';
 import {
@@ -15,10 +16,8 @@ import {setManagedAccount} from '@renderer/store/app';
 import {setAccountBalance} from '@renderer/store/accountBalances';
 import {setManagedAccountBalance} from '@renderer/store/managedAccountBalances';
 import {AppDispatch} from '@renderer/types';
-import {generateAccount} from '@renderer/utils/accounts';
 import {getNicknameField} from '@renderer/utils/forms/fields';
 import yup from '@renderer/utils/forms/yup';
-import {getKeyPairFromSigningKeyHex} from '@renderer/utils/signing';
 import {displayErrorToast, displayToast} from '@renderer/utils/toast';
 
 import CreateAccountModalFields, {FormValues, initialValues} from './CreateAccountModalFields';
@@ -49,8 +48,8 @@ const CreateAccountModal: FC<ComponentProps> = ({close, isGetStartedModal = fals
 
     if (type === 'add') {
       try {
-        const {publicKeyHex, signingKeyHex} = getKeyPairFromSigningKeyHex(signingKey);
-        accountNumberStr = publicKeyHex;
+        const {accountNumberHex, signingKeyHex} = new Account(signingKey);
+        accountNumberStr = accountNumberHex;
         signingKeyStr = signingKeyHex;
 
         // check if accountNumber is a friend
@@ -79,8 +78,8 @@ const CreateAccountModal: FC<ComponentProps> = ({close, isGetStartedModal = fals
     }
 
     if (type === 'create') {
-      const {publicKeyHex, signingKeyHex} = generateAccount();
-      accountNumberStr = publicKeyHex;
+      const {accountNumberHex, signingKeyHex} = new Account();
+      accountNumberStr = accountNumberHex;
       signingKeyStr = signingKeyHex;
       displayToast('You successfully created an account!', 'success');
     }

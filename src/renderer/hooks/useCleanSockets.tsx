@@ -1,18 +1,17 @@
 import {useCallback, useEffect} from 'react';
 import {useDispatch, useSelector} from 'react-redux';
-import axios from 'axios';
+import {Account, Bank, ConfirmationValidator} from 'thenewboston';
 
 import {getInactiveCleanSockets} from '@renderer/selectors/sockets';
 import {
   AppDispatch,
-  CleanCommand,
   CleanSocketState,
   CleanStatus,
   NodeCleanStatusWithAddress,
+  NodeType,
   SocketConnectionStatus,
 } from '@renderer/types';
 import {formatAddressFromNode, formatSocketAddressFromNode} from '@renderer/utils/address';
-import {generateSignedMessage, getKeyPairFromSigningKeyHex} from '@renderer/utils/signing';
 import {initializeSocketForCleanStatus} from '@renderer/utils/sockets';
 import handleCleanSocketEvent from '@renderer/utils/sockets/clean';
 import {displayErrorToast} from '@renderer/utils/toast';
@@ -25,20 +24,23 @@ const useCleanSockets = (): void => {
   const fetchCleanData = useCallback(
     async (cleanSocket: CleanSocketState): Promise<void> => {
       try {
-        const inCleaning = cleanSocket.clean_status === CleanStatus.cleaning;
-        const cleanData = {
-          clean: inCleaning ? CleanCommand.stop : CleanCommand.start,
-        };
-
         const address = formatAddressFromNode(cleanSocket);
         const socketAddress = formatSocketAddressFromNode(cleanSocket);
-        const {publicKeyHex, signingKey} = getKeyPairFromSigningKeyHex(cleanSocket.signingKey);
-        const signedMessage = generateSignedMessage(cleanData, publicKeyHex, signingKey);
-        const {data} = await axios.post<NodeCleanStatusWithAddress>(`${address}/clean`, signedMessage, {
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
+        const socketNetworkId = new Account(cleanSocket.signingKey);
+
+        let node: Bank | ConfirmationValidator;
+        node = new Bank(address);
+        const nodeConfig = await node.getConfig();
+
+        if (nodeConfig.node_type === NodeType.confirmationValidator) {
+          node = new ConfirmationValidator(address);
+        }
+
+        const inCleaning = cleanSocket.clean_status === CleanStatus.cleaning;
+
+        const data = inCleaning
+          ? ((await node.stopClean(socketNetworkId)) as NodeCleanStatusWithAddress)
+          : ((await node.startClean(socketNetworkId)) as NodeCleanStatusWithAddress);
 
         dispatch(
           updateCleanProcess({

@@ -67,14 +67,9 @@ const SendCoinsModal: FC<ComponentProps> = ({close, initialRecipient, initialSen
   }: FormValues): Promise<void> => {
     try {
       setSubmitting(true);
-      await sendBlock(
-        activeBank,
-        primaryValidator,
-        managedAccounts[senderAccountNumber].signing_key,
-        senderAccountNumber,
-        [{accountNumber: recipientAccountNumber, amount: parseInt(coins, 10)}],
-        memo,
-      );
+      await sendBlock(activeBank, managedAccounts[senderAccountNumber].signing_key, [
+        {amount: parseInt(coins, 10), memo, recipient: recipientAccountNumber},
+      ]);
       await Promise.all([
         dispatch(fetchAccountBalance(senderAccountNumber)),
         dispatch(fetchAccountBalance(recipientAccountNumber)),

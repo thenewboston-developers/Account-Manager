@@ -1,4 +1,4 @@
-import axios from 'axios';
+import {Bank} from 'thenewboston';
 
 import {
   ACCOUNTS,
@@ -10,7 +10,7 @@ import {
   VALIDATOR_CONFIRMATION_SERVICES,
   VALIDATORS,
 } from '@renderer/constants/actions';
-import {AXIOS_TIMEOUT_MS, defaultPaginatedQueryParam} from '@renderer/config';
+
 import {
   setBankAccounts,
   setBankAccountsError,
@@ -46,25 +46,27 @@ import {
   RawBankConfig,
   ValidatorConfirmationService,
 } from '@renderer/types';
-import {fetchPaginatedResults, sanitizePortFieldFromRawBankConfig} from '@renderer/utils/api';
+import {fetchBankPaginatedResults, sanitizePortFieldFromRawBankConfig} from '@renderer/utils/api';
 
-export const fetchBankAccounts = (address: string, params: PaginatedQueryParams = defaultPaginatedQueryParam) => async (
-  dispatch: AppDispatch,
-) => {
-  return fetchPaginatedResults<BankAccount>(address, ACCOUNTS, params, dispatch, setBankAccounts, setBankAccountsError);
+export const fetchBankAccounts = (address: string, params: PaginatedQueryParams) => async (dispatch: AppDispatch) => {
+  return fetchBankPaginatedResults<BankAccount>(
+    address,
+    ACCOUNTS,
+    params,
+    dispatch,
+    setBankAccounts,
+    setBankAccountsError,
+  );
 };
 
-export const fetchBankBanks = (address: string, params: PaginatedQueryParams = defaultPaginatedQueryParam) => async (
-  dispatch: AppDispatch,
-) => {
-  return fetchPaginatedResults<Node>(address, BANKS, params, dispatch, setBankBanks, setBankBanksError);
+export const fetchBankBanks = (address: string, params: PaginatedQueryParams) => async (dispatch: AppDispatch) => {
+  return fetchBankPaginatedResults<Node>(address, BANKS, params, dispatch, setBankBanks, setBankBanksError);
 };
 
-export const fetchBankBankTransactions = (
-  address: string,
-  params: PaginatedQueryParams = defaultPaginatedQueryParam,
-) => async (dispatch: AppDispatch) => {
-  return fetchPaginatedResults<BankTransaction>(
+export const fetchBankBankTransactions = (address: string, params: PaginatedQueryParams) => async (
+  dispatch: AppDispatch,
+) => {
+  return fetchBankPaginatedResults<BankTransaction>(
     address,
     BANK_TRANSACTIONS,
     params,
@@ -74,18 +76,16 @@ export const fetchBankBankTransactions = (
   );
 };
 
-export const fetchBankBlocks = (address: string, params: PaginatedQueryParams = defaultPaginatedQueryParam) => async (
-  dispatch: AppDispatch,
-) => {
-  return fetchPaginatedResults<BlockResponse>(address, BLOCKS, params, dispatch, setBankBlocks, setBankBlocksError);
+export const fetchBankBlocks = (address: string, params: PaginatedQueryParams) => async (dispatch: AppDispatch) => {
+  return fetchBankPaginatedResults<BlockResponse>(address, BLOCKS, params, dispatch, setBankBlocks, setBankBlocksError);
 };
 
 export const fetchBankConfig = (address: string) => async (
   dispatch: AppDispatch,
 ): Promise<{address: string; data?: BankConfig; error?: any}> => {
   try {
-    const {data: rawData} = await axios.get<RawBankConfig>(`${address}/config`, {timeout: AXIOS_TIMEOUT_MS});
-    const data = sanitizePortFieldFromRawBankConfig(rawData);
+    const rawData = await new Bank(address).getConfig();
+    const data = sanitizePortFieldFromRawBankConfig(rawData as RawBankConfig);
 
     if (data.node_type !== NodeType.bank) {
       const errorObject = {address, error: 'Node not a bank'};
@@ -110,11 +110,10 @@ export const fetchBankConfig = (address: string) => async (
   }
 };
 
-export const fetchBankConfirmationBlocks = (
-  address: string,
-  params: PaginatedQueryParams = defaultPaginatedQueryParam,
-) => async (dispatch: AppDispatch) => {
-  return fetchPaginatedResults<BankConfirmationBlock>(
+export const fetchBankConfirmationBlocks = (address: string, params: PaginatedQueryParams) => async (
+  dispatch: AppDispatch,
+) => {
+  return fetchBankPaginatedResults<BankConfirmationBlock>(
     address,
     CONFIRMATION_BLOCKS,
     params,
@@ -124,11 +123,10 @@ export const fetchBankConfirmationBlocks = (
   );
 };
 
-export const fetchBankInvalidBlocks = (
-  address: string,
-  params: PaginatedQueryParams = defaultPaginatedQueryParam,
-) => async (dispatch: AppDispatch) => {
-  return fetchPaginatedResults<InvalidBlock>(
+export const fetchBankInvalidBlocks = (address: string, params: PaginatedQueryParams) => async (
+  dispatch: AppDispatch,
+) => {
+  return fetchBankPaginatedResults<InvalidBlock>(
     address,
     INVALID_BLOCKS,
     params,
@@ -138,11 +136,10 @@ export const fetchBankInvalidBlocks = (
   );
 };
 
-export const fetchBankValidatorConfirmationServices = (
-  address: string,
-  params: PaginatedQueryParams = defaultPaginatedQueryParam,
-) => async (dispatch: AppDispatch) => {
-  return fetchPaginatedResults<ValidatorConfirmationService>(
+export const fetchBankValidatorConfirmationServices = (address: string, params: PaginatedQueryParams) => async (
+  dispatch: AppDispatch,
+) => {
+  return fetchBankPaginatedResults<ValidatorConfirmationService>(
     address,
     VALIDATOR_CONFIRMATION_SERVICES,
     params,
@@ -152,11 +149,8 @@ export const fetchBankValidatorConfirmationServices = (
   );
 };
 
-export const fetchBankValidators = (
-  address: string,
-  params: PaginatedQueryParams = defaultPaginatedQueryParam,
-) => async (dispatch: AppDispatch) => {
-  return fetchPaginatedResults<BaseValidator>(
+export const fetchBankValidators = (address: string, params: PaginatedQueryParams) => async (dispatch: AppDispatch) => {
+  return fetchBankPaginatedResults<BaseValidator>(
     address,
     VALIDATORS,
     params,
